@@ -1,4 +1,11 @@
 {
+  "name": "Team-Profile-Generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
     "inquirer": "^8.2.0",
     "jest": "^27.5.1"
