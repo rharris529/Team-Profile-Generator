@@ -1,23 +1,26 @@
 const inquirer = require('inquirer');
+const fs = require('fs');
 const Engineer = require('./lib/Engineer.js');
 const Intern = require('./lib/Intern.js');
-const Manager = require("./lib/Manager.js");
+const Manager = require("./lib/Manager");
+const createHTML = require("./src/page-template");
+
+const finishedProduct = './dist/index.html';
+const finishedStyling = './dist/style.css';
+const stylesheet = './src/style.css';
 
 // function to add new engineer/intern
-const defineRole = () => {
-    inquirer.prompt([
+const defineRole = [
         {
             type: "list",
             name: "role",
-            message: "Would you like to add team memebers to this project",
+            message: "Would you like to add team memebers to this project (Required)",
             choices: ['Add Engineer', 'Add Intern', 'Finished Team'],
         }
-    ])
-}
+]
 
 // data for the manager
-const defineManager = () => {
-    return inquirer.prompt([
+const defineManagerQuestions = [
         {
             type: "input",
             name: "name",
@@ -70,13 +73,10 @@ const defineManager = () => {
                 }
             }
         }
-    ]);
-};
+]
 
 // data for engineer 
-const defineEngineer = () => {
-
-    return inquirer.prompt([
+const defineEngineer = [
         {
             type: "input",
             name: "name",
@@ -130,13 +130,11 @@ const defineEngineer = () => {
             }
 
         }
-    ]);
-}
+]
+
 
 // get data for intern
-const defineIntern = () => {
-
-    return inquirer.prompt([
+const defineIntern = [
         {
             type: "input",
             name: "name",
@@ -189,37 +187,28 @@ const defineIntern = () => {
                 }
             }
         }
-    ]);
-}
+]
 
 let projectTeam = [];
 
-// adds team member to project team array
+// function to designate user to appropiate employee function
 const addTeamMember = () => {
-    return inquirer.prompt(addTeamMember)
-    .then(prompt => {
-        switch (prompt.role) {
-            case 'Engineer':
-            addEngineer();
+    inquirer.prompt(defineRole)
+    .then(promptInput => {
+        switch (promptInput.role) {
+            case 'Add Engineer':
+            addEngineer();    
             break;
-
-            case 'Intern':
+            
+            case 'Add Intern':
             addIntern();
             break;
+
+            default:
+            generatePage();
         }
     })
 }
-
-// gather manager data to push to project team array
-const addManager = () => {
-    return inquirer.prompt(defineManager)
-    .then(promptInput => {
-
-        const manager = new Manager(promptInput.name, promptInput.id, promptInput.email, promptInput.officeNumber);
-        projectTeam.push(manager);
-        addTeamMember();
-    })
-};
 
 // gathers engineer data to push to project team array
 const addEngineer = () => {
@@ -229,6 +218,7 @@ const addEngineer = () => {
         const engineer = new Engineer(promptInput.name, promptInput.id, promptInput.email, promptInput.github);
         projectTeam.push(engineer);
         addTeamMember();
+
     })
 };
 
@@ -244,10 +234,44 @@ const addIntern = () => {
     })
 }
 
-function init() {
-    addManager()
-    .then(defineRole())
-    .then(addTeamMember())
+// gather manager data to push to project team array
+const createTeam = () => {
+    return inquirer.prompt(defineManagerQuestions)
+    .then(promptInput => {
+
+        const manager = new Manager(promptInput.name, promptInput.id, promptInput.email, promptInput.officeNumber);
+        projectTeam.push(manager);
+        addTeamMember();
+
+    })
+};
+
+const writeToFile = (filename, data) => {
+    fs.writeFile(filename, data, err => {
+        if (err) throw new Error(err);
+        console.log("File created! Find in the dist folder to see it!");
+    });
 }
+
+const copyStyling = () => {
+    fs.copyFile(stylesheet, finishedStyling, err => {
+        if (err) {
+            console.log('Error copying file! Try again.')
+            return console.log(err);
+        } else {
+            console.log('File copy successful!')
+        }
+    });
+}
+
+const generatePage = () => {
+    writeToFile(finishedProduct, createHTML(projectTeam));
+    copyStyling();
+}
+
+function init() {
+    createTeam();
+}
+
 
 init();
